@@ -1,0 +1,115 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<style>
+    .main-container {
+        display: flex;
+        justify-content: space-between;
+    }
+    .rightside {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: baseline;
+        margin-left: 10px;
+        overflow: auto;
+    }
+    .result-text {
+        margin-top: 10px;
+        word-wrap: break-word;
+        overflow: auto;
+        font-size: large;
+    }
+    audio {
+        display: block;
+        margin: 1rem auto 0.5rem;
+    }
+</style>
+
+<div class="text-center">
+    <h1 class="display-4">@Model.HunterName</h1>
+</div>
+
+<div class="main-container">
+  <div id="myCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="false" style="width: 600px;">
+    <div class="carousel-indicators">
+        @for(int i = 0; i < Model.Images.Count; i++)
+        {
+            <button type="button" data-bs-target="#myCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+        }
+    </div>
+    <div class="carousel-inner">
+        @for(int i = 0; i < Model.Images.Count; i++)
+        {
+            <div class="carousel-item @(i == 0 ? "active" : "")">
+                <img src="data:image/jpeg;base64,@Convert.ToBase64String(@Model.Images[i])" alt="@Model.ImageNames[i]" style="width:100%">
+            </div>
+        }
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#myCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#myCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+
+  <div class="rightside">
+    <form method="post">
+      <input type="hidden" id="selectedImage" asp-for="SelectedImageName" value="" />
+      <button id="submitBtn" type="submit" class="btn btn-primary">Hunt</button>
+    </form>
+    <div id="result" class="result-text">Click Hunt button to reveal the secret</div>
+    <div>
+        <audio id="audioControl" class="audio-controls" controls />
+    </div>
+  </div>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        const form = document.forms[0];
+        form.addEventListener("submit", async function (event)
+        {
+            // Get the active slide in carousel
+            var activeImg = document.querySelector('.carousel-item.active img').alt;
+            document.getElementById('selectedImage').value = activeImg;
+
+            // Call backend to get the result
+            event.preventDefault();
+            fetch(form.action,
+                {
+                    method: form.method,
+                    body: new FormData(form)
+                }
+            )
+            .catch(err => {
+                // display error message
+                result.innerHTML = err;
+            })
+            .then(response => {
+                // read json from the response stream and display the data
+                response.json().then(data => {
+                    if(data.error)
+                        result.innerHTML = data.error;
+                    else if(data.text) {
+                        result.innerHTML = data.text;
+                        var binary = atob(data.speech);
+                        var bytes = new Uint8Array(binary.length);
+                        for (var i = 0; i < binary.length; i++) {
+                            bytes[i] = binary.charCodeAt(i);
+                        }
+                        var blob = new Blob([bytes], { type: 'audio/wav' });
+                        var url = URL.createObjectURL(blob);
+                        document.getElementById('audioControl').src = url;
+                    }
+                });
+            }).finally(() => {
+            });
+        });
+    </script>
+}
