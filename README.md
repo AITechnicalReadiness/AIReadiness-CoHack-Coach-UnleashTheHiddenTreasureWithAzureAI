@@ -1,1 +1,1 @@
-# AIReadiness-CoHack-Coach-UnleashTheHiddenTreasureWithAzureAI
+# AI Readiness CoHack-Coach UnleashTheHiddenTreasureWithAzureAI
