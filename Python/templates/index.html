@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+
+    <title>AI Vision Analysis</title>
+    <style>
+         .carousel-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+        }
+        .carousel-image {
+            width: 100%;
+            height: auto;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+        .carousel-button.prev {
+            left: 0;
+        }
+        .carousel-button.next {
+            right: 0;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <h1 style="text-align: center;">{{ title }}</h1>
+        {% if analysis_results %}
+            <h2>Analysis Results</h2>
+            <p>{{ analysis_results }}</p>
+            <img src="data:image/jpeg;base64,{{ images }}" alt="Selected Image" class="carousel-image">
+           
+           
+        {% else %}
+        <form method="POST" action="/" onsubmit="prepareImageForAnalysis()" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 800px;">
+                
+                    <button class="carousel-button prev" type="button" onclick="showPrevImage()">Previous</button>
+                    <img id="carousel-image" class="carousel-image" src="data:image/jpeg;base64,{{ images[0] }}" alt="Image">
+                    <button class="carousel-button next" type="button" onclick="showNextImage()">Next</button>
+             
+                <input type="hidden" name="selected_image" id="selected_image">
+                <br>
+                <button type="submit">🔥Hunt</button>
+            </form>
+
+        {% endif %}
+    </div>
+    
+        <script>
+            let currentIndex = 0;
+            const images = {{ images | tojson }};
+            
+            function showNextImage() {
+                currentIndex = (currentIndex + 1) % images.length;
+                updateCarouselImage();
+            }
+            
+            function showPrevImage() {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                updateCarouselImage();
+            }
+            
+            function updateCarouselImage() {
+                const carouselImage = document.getElementById('carousel-image');
+                carouselImage.src = `data:image/jpeg;base64,${images[currentIndex]}`;
+            }
+
+            function setSelectedImageBase64(imageBase64) {
+                document.getElementById('selected_image').value = imageBase64;
+            }
+
+            function prepareImageForAnalysis() {
+                const selectedImageBase64 = images[currentIndex];
+                setSelectedImageBase64(selectedImageBase64);
+      }
+
+        </script>
+    </div>
+</body>
+</html>
